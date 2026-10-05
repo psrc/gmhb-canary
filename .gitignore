@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.Renviron
+.Renviron.*
+.R-library/
+results/
+logs/
+*.har
