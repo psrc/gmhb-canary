@@ -15,9 +15,11 @@ main <- function() {
   args <- commandArgs(trailingOnly = TRUE)
   if (identical(args, "--help")) {
     cat("Usage: Rscript scripts/query_orders.R [--since YYYY-MM-DD [--before YYYY-MM-DD]] [--output FILE.csv] [--email | --preview-email] [--env-file PATH]\n",
-        "Default: previous calendar month; --before is exclusive, using CMS UTC dates.\n",
+        "Default: previous complete Monday-Sunday week (based on today's Los Angeles date).\n",
+        "--before is exclusive, using CMS UTC dates.\n",
         "The CMS request includes --before through 23:59:59Z; that date is excluded locally.\n",
         "With --since alone: all orders on or after that date.\n",
+        "Default output: CSV only; no email is sent unless --email is specified.\n",
         "--email sends results (or a failure alert) using SMTP settings in .Renviron.\n",
         "--preview-email writes HTML/text previews without sending or requiring SMTP settings.\n", sep = "")
     return(invisible(NULL))
@@ -47,7 +49,7 @@ main <- function() {
       if (!requireNamespace(package, quietly = TRUE)) stop(paste("Missing dependency:", package), call. = FALSE)
     }
   }
-  window <- previous_month()
+  window <- previous_week()
   since <- if (is.null(options[["--since"]])) window$since else options[["--since"]]
   before <- options[["--before"]]
   if (is.null(options[["--since"]]) && is.null(before)) before <- window$before

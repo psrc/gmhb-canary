@@ -21,10 +21,10 @@ valid_date <- function(value) {
   value
 }
 
-previous_month <- function(today = as.Date(format(Sys.time(), tz = "America/Los_Angeles",
+previous_week <- function(today = as.Date(format(Sys.time(), tz = "America/Los_Angeles",
                                                  format = "%Y-%m-%d"))) {
-  first <- as.Date(format(today, "%Y-%m-01"))
-  list(since = format(first - 1L, "%Y-%m-01"), before = format(first, "%Y-%m-%d"))
+  monday <- today - (as.integer(format(today, "%u")) - 1L)
+  list(since = format(monday - 7L, "%Y-%m-%d"), before = format(monday, "%Y-%m-%d"))
 }
 
 parse_json <- function(text, stage) {
@@ -62,7 +62,7 @@ order_message <- function(since, before = NULL) {
     before <- valid_date(before)
     if (before <= since) cms_error("The exclusive end date must be after the start date.")
     # Reproduce the observed UI's inclusive upper timestamp. The local filter
-    # still excludes this date to keep reports within the previous month.
+    # still excludes this date to keep reports within the selected window.
     where <- paste0(where, " AND Document_Date__c <= ", before, "T23:59:59Z")
   }
   list(actions = list(list(

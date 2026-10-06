@@ -2,12 +2,11 @@
 
 Retrieve Growth Management Hearings Board orders from the Washington ELUHO CMS
 using R and direct HTTP. Write a UTF-8 CSV and optionally send a readable SMTP
-notification. The default window is the previous complete calendar month.
+notification. The default window is the previous complete week (Monday-Sunday).
 
 ## Run
 
 Requires R >= 4.1, `httr2`, `jsonlite`, `curl`, and `xml2`.
-From the repository directory, install into the ignored local library:
 
 ```R
 packages <- c("httr2", "jsonlite", "curl", "xml2")
@@ -17,12 +16,21 @@ if (length(missing)) {
 }
 ```
 
-Default retrieves the previous complete calendar month (as determined by today's
-date in `America/Los_Angeles` timezone):
+Default retrieves the previous calendar week (as determined by today's date in `America/Los_Angeles` timezone):
 
 ```powershell
 Rscript scripts/query_orders.R
 ```
+
+This exports CSV only. To also send the weekly report by email:
+
+```powershell
+Rscript scripts/query_orders.R --email
+```
+
+For example, a run on Tuesday, October 6, 2026 retrieves September 28 through
+October 4, with October 5 as the exclusive end date. Order filtering uses CMS
+UTC dates.
 
 To specify the query range explicitly:
 
@@ -43,7 +51,7 @@ Zero results produce a header-only CSV and exit 0. Network, HTTP, API-contract,
 or output failures produce an error on stderr and exit 1. Do not consume an old
 CSV after a failed run; always check the process exit status.
 
-Since it would be rare for the Board to make more decisions in one month than fit 
+Since it would be rare for the Board to make more decisions in one week than fit
 on a single CMS results page, the script exports up to 50 records and will indicate
 **REVIEW REQUIRED** if 50 or more were returned. Check the CMS manually for 
 additional orders.
@@ -92,12 +100,13 @@ or unverified document URLs.
 
 ## Windows Task Scheduler
 
-1. Create a task with a monthly trigger at a time the user is normally logged in.
-   The command's default window covers the previous month regardless of the run day.
+1. Create a task with a weekly trigger on Monday afternoon at a time the user is
+   normally logged in. The default window covers the previous Monday-Sunday week.
 2. Action: **Start a program**. Program is the full path to `Rscript.exe`, for
    example `C:\Program Files\R\R-4.6.1\bin\x64\Rscript.exe`.
-3. Arguments: Full path to `query_orders.R`, for example 
-   `C:\projects\gmhb-canary\scripts\query_orders.R`.
+3. Arguments: Full path to `query_orders.R` followed by `--email`, for example
+   `"C:\projects\gmhb-canary\scripts\query_orders.R" --email`.
+   Without `--email`, the task only exports CSV and logs `EMAIL_DISABLED`.
 4. Set **Start in** to the project directory. The script uses absolute project
    paths internally, so that working directory is not required for file lookup.
 5. In Settings, enable running a missed task as soon as possible and choose
@@ -112,6 +121,6 @@ intended account and confirm the email arrives before enabling the trigger.
 Check `logs/gmhb-canary.log` and Task Scheduler's Last Run Result. Log events use
 UTC timestamps and record counts/stages without credentials or raw server replies.
 
-A delayed task uses the previous month relative to its **actual execution date**.
-If an entire month is missed, rerun the missing month with explicit `--since` and
+A delayed task uses the previous week relative to its **actual execution date**.
+If an entire week is missed, rerun the missing week with explicit `--since` and
 `--before` arguments. Late-posted or backdated orders would require a manual rerun.

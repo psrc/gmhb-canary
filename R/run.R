@@ -36,7 +36,9 @@ run_order_job <- function(since, before, output, mode = c("csv", "email", "previ
     stage <- "CSV export"
     dir.create(dirname(output), recursive = TRUE, showWarnings = FALSE)
     write.csv(orders, output, row.names = FALSE, na = "", fileEncoding = "UTF-8")
-    if (mode != "csv") {
+    if (mode == "csv") {
+      log("EMAIL_DISABLED", "CSV-only mode; no email sent. Use --email to send results.")
+    } else {
       stage <- "email formatting"
       email <- format_order_email(orders, since, before)
       if (is.null(email)) {
